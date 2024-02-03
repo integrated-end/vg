@@ -18,21 +18,28 @@
     font-size: 32px;
   }
 
+  
   .image img {
     
-    width: 1000px;
+    width: 90%;
+    height: auto;
+    
+  }
+
+  .images img {
+  
+    width: 100%;
     height: auto;
     
     
   }
 
-  .images img {
-    
-    width: 1000px;
-    height: auto;
-    
-    
-  }
+  #faq-list {
+      width: 100%;
+      margin: 0 auto;
+      padding: 0;
+      list-style: none;
+    }
 
   .heading h2 {
     font-size: 20px;
@@ -60,18 +67,25 @@
 
   .image img {
     
-    width: 470px;
+    width: 90%;
     height: auto;
     
   }
 
   .images img {
   
-    width: 670px;
+    width: 100%;
     height: auto;
     
     
   }
+
+  #faq-list {
+      width: 100%;
+      margin: 0 auto;
+      padding: 0;
+      list-style: none;
+    }
   
   .top-wrapper {
     text-align: left;
