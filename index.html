@@ -1,253 +1,1041 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ヴェルデ ゴルフ</title>
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-  
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <script src="https://kit.fontawesome.com/ccbfb0da53.js" crossorigin="anonymous"></script>
-  <link href="stylesheet.css" rel="stylesheet">
-  <link rel="stylesheet" href="responsive.css">
-<title>VERDE - あなたのスタイルを創る。</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>VERDE barber’s club – Reserve Hero + Mini Cards + Photos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
 
+<style>
+  :root{
+    --gold:#b19a5f;
+    --ink:#ebebe4;
+    --muted:rgba(243,239,230,.74);
+    --shadow: 0 14px 10px rgba(0,0,0,.42);
+
+    --r: 18px;
+    --pad: clamp(16px, 4.2vw, 22px);
+    --gap: 37px;
+
+    /* 背景パターン */
+    --patternSize: 820px;
+    --patternOpacity: 0.09;
+    --patternContrast: 1.12;
+    --patternBright: 1.08;
+    --patternSat: 1.18;
+
+    /* 高さ（差） */
+    --hHero: 228px;  /* 予約：大きい */
+    --hRow: 132px;   /* 他：小さい */
+    --hBack: 560px;  /* 開いた時 */
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    color:var(--ink);
+    font-family:"Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background:#0a0a0e;
+  }
+
+  /* ===== Background ===== */
+  .bg{
+    position:fixed; inset:0; z-index:-1;
+    background:
+      radial-gradient(900px 650px at 18% 10%, rgba(255,255,255,.07), transparent 58%),
+      radial-gradient(760px 560px at 88% 35%, rgba(255,255,255,.05), transparent 62%),
+      linear-gradient(180deg, #050507 0%, #0a0a0e 55%, #050507 100%);
+  }
+  .bg::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(140% 220% at 15% 12%,
+        rgba(0,0,0,0) 0%,
+        rgba(0,0,0,0) 40%,
+        rgba(0,0,0,.42) 78%,
+        rgba(0,0,0,.72) 100%
+      ),
+      url("haikei.png") center/var(--patternSize) auto repeat;
+    opacity: var(--patternOpacity);
+    mix-blend-mode: normal;
+    filter: saturate(var(--patternSat)) contrast(var(--patternContrast)) brightness(var(--patternBright));
+    pointer-events:none;
+  }
+
+  .app{
+    min-height:100%;
+    padding: calc(env(safe-area-inset-top) + 18px)
+             max(env(safe-area-inset-right), 14px)
+             calc(env(safe-area-inset-bottom) + 18px)
+             max(env(safe-area-inset-left), 14px);
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+
+  /* ===== Header ===== */
+  .header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    padding: 0 2px;
+  }
+  .logo{
+    height: 44px;
+    width:auto;
+    display:block;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.35));
+  }
+  .hint{
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(243,239,230,.18);
+    background: rgba(170, 170, 170, 0.18);
+    color: rgba(243,239,230,.78);
+    font-size:12px;
+    letter-spacing:.06em;
+    white-space:nowrap;
+  }
+  .hint .dot{
+    width:8px;height:8px;border-radius:999px;
+    background: rgba(243,239,230,.55);
+    box-shadow: 0 0 0 5px rgba(243,239,230,.06);
+  }
+
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap: var(--gap);
+  }
+
+  /* ===== Flip Card (base) ===== */
+  .flip{
+    position:relative;
+    width:100%;
+    border-radius: var(--r);
+    perspective: 1100px;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .flip[data-open="0"]{ height: var(--hRow); }
+  .flip[data-open="1"]{ height: var(--hBack); }
+  .flip.hero[data-open="0"]{ height: var(--hHero); }
+
+  .inner{
+    position:absolute; inset:0;
+    border-radius: var(--r);
+    transform-style:preserve-3d;
+    transition: transform .75s cubic-bezier(.2,.8,.2,1);
+    box-shadow: var(--shadow);
+  }
+  .flip[data-open="1"] .inner{ transform: rotateY(180deg); }
+
+  .face{
+    position:absolute; inset:0;
+    border-radius: var(--r);
+    backface-visibility:hidden;
+    overflow:hidden;
+    border: 1px solid rgba(243,239,230,.11);
+    background: rgba(10,10,14,.18);
+    backdrop-filter: blur(10px) saturate(1.05);
+    -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  }
+  .face::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(520px 220px at 22% 10%, rgba(177,154,95,.10), transparent 60%),
+      radial-gradient(520px 240px at 88% 75%, rgba(255,255,255,.05), transparent 62%);
+    opacity:.26;
+    pointer-events:none;
+  }
+
+  /* ===== 予約：もっと差をつける（ワクワク） ===== */
+  .flip.hero .face{
+    border: 1px solid rgba(177,154,95,.36);
+  }
+  .flip.hero .face::after{
+    background:
+      radial-gradient(620px 300px at 18% 18%, rgba(177,154,95,.26), transparent 62%),
+      radial-gradient(520px 240px at 92% 78%, rgba(255,255,255,.07), transparent 62%),
+      linear-gradient(115deg, transparent 0%, rgba(255,255,255,.06) 38%, transparent 62%);
+    opacity:.52;
+  }
+  .flip.hero .face::before{
+    content:"";
+    position:absolute; inset:-2px;
+    border-radius: calc(var(--r) + 2px);
+    background: conic-gradient(
+      from 0deg,
+      rgba(177,154,95,.0),
+      rgba(177,154,95,.55),
+      rgba(255,255,255,.08),
+      rgba(177,154,95,.55),
+      rgba(177,154,95,.0)
+    );
+    opacity:.20;
+    filter: blur(100px);
+    animation: spin 6.5s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes spin{ to{ transform: rotate(60deg); } }
+
+  .flip.hero[data-open="0"] .inner{
+    animation: breathe 5s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-2px); }
+  }
+
+  /* ===== Front ===== */
+  .front{
+    padding: var(--pad);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    gap: 12px;
+    position:relative;
+    z-index:1;
+    padding-right: calc(var(--pad) + 122px);
+  }
+  .flip.hero .front{
+    padding-right: calc(var(--pad) + 148px);
+  }
+
+  .orn{
+    position:absolute;
+    right: calc(var(--pad) - 4px);
+    top: 50%;
+    transform: translateY(-50%) rotate(8deg);
+    width: 136px;
+    height: auto;
+    max-height: calc(100% - 16px);
+    opacity: .18;
+    pointer-events:none;
+    filter:
+      drop-shadow(0 18px 22px rgba(0,0,0,.38))
+      saturate(1.06) contrast(1.02);
+    mix-blend-mode: screen;
+    transition: opacity .25s ease, transform .25s ease, filter .25s ease;
+  }
+  .flip.hero .orn{
+    width: 156px;
+    opacity: .22;
+    transform: translateY(-50%) rotate(10deg);
+    mix-blend-mode: screen;
+    filter:
+      drop-shadow(0 22px 26px rgba(0,0,0,.40))
+      saturate(1.08) contrast(1.03);
+  }
+  .flip[data-open="0"]:hover .orn{
+    opacity: .26;
+    transform: translateY(-50%) rotate(7deg) scale(1.02);
+  }
+  .orn.reserve{ right: calc(var(--pad) - 10px); transform: translateY(-50%) rotate(14deg); }
+  .orn.menu{ opacity:.16; transform: translateY(-50%) rotate(6deg); }
+  .orn.location{ opacity:.17; transform: translateY(-50%) rotate(10deg); }
+  .orn.mood{ opacity:.14; transform: translateY(-50%) rotate(8deg); mix-blend-mode: screen; }
+
+  .topRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+  }
+  .tag{
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(243,239,230,.14);
+    background: rgba(255,255,255,.03);
+    color: rgba(243,239,230,.76);
+    font-size:12px;
+    letter-spacing:.10em;
+  }
+  .flip.hero .tag{
+    border:1px solid rgba(177,154,95,.52);
+    background: rgba(177,154,95,.16);
+    color: rgba(243,239,230,.95);
+  }
+
+  .more{
+    width:34px;height:34px;
+    border-radius: 999px;
+    border:1px solid rgba(243,239,230,.14);
+    background: rgba(0,0,0,.12);
+    display:grid;place-items:center;
+    color: rgba(243,239,230,.78);
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+
+  .title{
+    margin:0;
+    font-family:"Cinzel", serif;
+    font-weight:800;
+    letter-spacing:.06em;
+    font-size: clamp(21px, 5.6vw, 30px);
+    line-height:1.12;
+  }
+  .sub{
+    margin-top:6px;
+    color: rgba(243,239,230,.70);
+    font-size:12px;
+    letter-spacing:.08em;
+  }
+
+  .flip:not(.hero) .front{ gap: 10px; }
+  .flip:not(.hero) .title{ font-size: clamp(18px, 4.6vw, 22px); letter-spacing:.04em; }
+  .flip:not(.hero) .sub{ font-size:11px; opacity:.95; }
+  .flip:not(.hero) .tag{ padding:7px 10px; font-size:11px; }
+
+  .metaRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(243,239,230,.10);
+    padding-top: 12px;
+  }
+  .metaOneLine{
+    font-size:12px;
+    color: rgba(243,239,230,.70);
+    letter-spacing:.08em;
+  }
+  .chip{
+    font-size:12px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border:1px solid rgba(243,239,230,.14);
+    background: rgba(255,255,255,.03);
+    color: rgba(243,239,230,.80);
+    letter-spacing:.06em;
+    white-space:nowrap;
+  }
+  .flip.hero .chip{
+    border:1px solid rgba(177,154,95,.42);
+    background: rgba(177,154,95,.12);
+    color: rgba(243,239,230,.95);
+  }
+  .flip:not(.hero) .metaRow{ padding-top: 10px; }
+  .flip:not(.hero) .metaOneLine{ font-size:11px; }
+  .flip:not(.hero) .chip{ font-size:11px; padding:6px 9px; }
+
+  .heroCtaRow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top: 2px;
+  }
+  .heroBtn{
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(177,154,95,.60);
+    background:
+      radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,.12), transparent 55%),
+      linear-gradient(180deg, rgba(177,154,95,.28), rgba(177,154,95,.12));
+    color: rgba(243,239,230,.98);
+    font-weight: 800;
+    letter-spacing:.06em;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    box-shadow: 0 10px 22px rgba(0,0,0,.25);
+  }
+  .spark{
+    width:18px;height:18px;
+    display:inline-block;
+    filter: drop-shadow(0 8px 14px rgba(177,154,95,.25));
+    animation: twinkle 1.8s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{ transform: rotate(0deg) scale(1); opacity:.92; }
+    50%{ transform: rotate(10deg) scale(1.06); opacity:1; }
+  }
+
+  /* ===== Back ===== */
+  .back{
+    transform: rotateY(180deg);
+    display:flex;
+    flex-direction:column;
+  }
+  .backHeader{
+    padding: 14px var(--pad) 12px;
+    border-bottom: 1px solid rgba(243,239,230,.10);
+    background: rgba(0,0,0,.16);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .bt{ display:flex; flex-direction:column; gap:2px; }
+  .bt .t1{
+    margin:0; font-family:"Cinzel", serif; font-weight:800;
+    letter-spacing:.06em; font-size:16px;
+  }
+  .bt .t2{
+    margin:0; color: rgba(243,239,230,.70); font-size:12px; letter-spacing:.08em;
+  }
+
+  .actions{ display:flex; align-items:center; gap:10px; }
+
+  /* ▼▼▼ ここが「閉じる重なり」対策の核心：iconBtnを“1つに統一” ▼▼▼ */
+  .iconBtn{
+    height:40px;
+    padding: 0 12px;
+    border-radius: 14px;
+    border:1px solid rgba(243,239,230,.16);
+    background: rgba(0,0,0,.18);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color: rgba(243,239,230,.86);
+    cursor:pointer;
+  }
+  .iconBtn svg{ width:18px;height:18px; opacity:.92; }
+  .iconBtn .lbl{
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.08em;
+    color: rgba(243,239,230,.86);
+    white-space:nowrap;
+  }
+  /* ▲▲▲ 統一ここまで ▲▲▲ */
+
+  .btn{
+    height:40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border:1px solid rgba(177,154,95,.40);
+    background: rgba(177,154,95,.16);
+    color: var(--ink);
+    font-weight:800;
+    letter-spacing:.06em;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    white-space:nowrap;
+  }
+  .btn.secondary{
+    border:1px solid rgba(243,239,230,.16);
+    background: rgba(255,255,255,.04);
+    color: rgba(243,239,230,.82);
+  }
+
+  .content{
+    flex:1;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px var(--pad) 18px;
+  }
+
+  .section{
+    border: 1px solid rgba(243,239,230,.10);
+    background: rgba(0,0,0,.10);
+    border-radius: 18px;
+    padding: 14px 14px;
+    margin: 12px 0;
+  }
+  .section h3{
+    margin: 0 0 10px;
+    font-size:12px;
+    letter-spacing:.12em;
+    color: rgba(243,239,230,.75);
+    font-weight:800;
+  }
+
+  .row{
+    display:flex; justify-content:space-between; gap:12px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(243,239,230,.08);
+  }
+  .row:first-of-type{ border-top:0; padding-top:0; }
+  .row .l{ color: rgba(243,239,230,.70); font-size:12px; letter-spacing:.08em; }
+  .row .r{ color: var(--ink); font-size:13px; letter-spacing:.03em; text-align:right; }
+
+  details{
+    border-top: 1px solid rgba(243,239,230,.08);
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+  details:first-of-type{ border-top:0; padding-top:0; margin-top:0; }
+  summary{
+    list-style:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    color: var(--ink);
+    font-weight:800;
+    letter-spacing:.04em;
+    font-size:13px;
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary .chev{
+    width:10px;height:10px;
+    border-right:2px solid rgba(243,239,230,.60);
+    border-bottom:2px solid rgba(243,239,230,.60);
+    transform: rotate(45deg);
+    transition:.2s;
+    margin-left:auto;
+  }
+  details[open] summary .chev{ transform: rotate(225deg); }
+  .detailBody{
+    color: rgba(243,239,230,.70);
+    font-size:12px;
+    line-height:1.85;
+    margin-top:10px;
+  }
+
+  .photos{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+  .ph{
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
+    overflow:hidden;
+    border: 1px solid rgba(243,239,230,.10);
+    background: rgba(255,255,255,.03);
+  }
+  .ph img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .phCap{
+    margin-top:10px;
+    color: rgba(243,239,230,.70);
+    font-size:12px;
+    line-height:1.85;
+  }
+
+  .logoBig{
+    width:min(320px, 78%);
+    height:auto;
+    display:block;
+    margin: 2px auto 10px;
+    opacity:.95;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.30));
+  }
+
+  /* ===== MAP 埋め込み（貼り付け感なく） ===== */
+  .mapFrame{
+    border-radius: 16px;
+    overflow:hidden;
+    border: 1px solid rgba(243,239,230,.10);
+    background: rgba(255,255,255,.03);
+  }
+  .mapFrame iframe{
+    width:100%;
+    height:260px;
+    border:0;
+    display:block;
+  }
+  .mapBtns{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .inner{ transition:none; }
+    .flip.hero[data-open="0"] .inner{ animation:none; }
+    .flip.hero .face::before{ animation:none; }
+    .spark{ animation:none; }
+  }
+</style>
 </head>
 
 <body>
-  <header>
-    <div class="container">
-      <div class="header-left">
-        <img class="logo" src="名称未設定-34のコピー.png">
-      </div>
-      <!-- ここにスマートフォン用のメニューアイコンを追加してください -->
-      <span class="fa fa-bars menu-icon"></span>
+  <div class="bg" aria-hidden="true"></div>
 
-      <div class="header-right">
-        <a href="https://coubic.com/verde-green">予約サイトへ</a>
-        <a href="https://integrated-end.github.io/vgp/">プライバシーポリシー</a>
-        <a href="#" class="login">ログイン</a>
-      </div>
-    </div>
-  </header>
-  <div class="top-wrapper">
-    <div class="container">
-      <h1>大人の上質な空間をあなたに。</h1>
-      
-      <p>シミュレーションゴルフ併設の高級理容店　VERDE CLUBにようこそ。</p>
-      
-      <div class="btn-wrapper">
-        <a href="https://coubic.com/verde-green" class="btn signup">予約する</a>
-        <h2>インスタを見る⇩⇩</h2>
-        <a href="https://www.instagram.com/verde_bar_ber_club?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="btn facebook">BARBERS CLUBへ
-          <span class="fa-brands fa-instagram"></span>
-        </a>
+  <main class="app">
+    <header class="header">
+      <img class="logo" src="logo.png" alt="VERDE barbers club" />
+      <div class="hint"><span class="dot" aria-hidden="true"></span>タップ</div>
+    </header>
 
-        <a href="https://www.instagram.com/verde__golf__club?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="btn twitter">GOLF CLUBへ
-          <span class="fa-brands fa-instagram"></span>
-        </a>
-      </div>
-    </div>
-  </div>
+    <section class="list">
+      <!-- HERO: RESERVE（特別） -->
+      <article class="flip hero" data-open="0">
+        <div class="inner">
+          <section class="face front">
+            <img class="orn reserve" src="verde 背景　02.png" alt="" aria-hidden="true" />
 
-  <div class="map-wrapper">
-    <div class="btn-wrapper">
-      <h2>【営業時間】</h2>
-      <h3>24時間営業</h3>
-      <h2>【TEL】</h2>
-      <h3>080-7108-0729</h3>
-      <h2>【定休日】</h2>
-      <h3>24時間営業</h3>
-      
-  </div>
+            <div class="topRow">
+              <div class="tag">RESERVE</div>
+              <div class="more" aria-hidden="true">+</div>
+            </div>
 
-  </div>
+            <div>
+              <h2 class="title">予約する</h2>
 
-  <div class="map-wrapper">
-    <div class="btn-wrapper">
-      <h2>市川市曽谷6-30-16</h2>
-      <p>地図はこちらで↓</p>
-      <a href="https://maps.app.goo.gl/DmhVkTSqrHMHyXTB6" class="btn signup">Googleマップへ</a>
-  </div>
+              <div class="heroCtaRow">
+                <a class="heroBtn" href="https://coubic.com/verde-green" target="_blank" rel="noopener">
+                  <svg class="spark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 2l1.1 4.2L17 8l-3.9 1.8L12 14l-1.1-4.2L7 8l3.9-1.8L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M18.6 12.4l.6 2.2 2.2.6-2.2.6-.6 2.2-.6-2.2-2.2-.6 2.2-.6.6-2.2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".8"/>
+                  </svg>
+                  今すぐ空きを見る
+                </a>
+              </div>
+            </div>
 
-  </div>
+            <div class="metaRow">
+              <div class="metaOneLine">9:30–19:00 / Cut Last 19:00</div>
+              <div class="chip">予約優先・当日OK</div>
+            </div>
+          </section>
 
-  <div class="lesson-wrapper">
-    <div class="container">
-      <div class="heading">
-        <h1>VERDE GOLF CLUB</h1>
-      </div>
-      <div class="lessons">
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1892 のコピー.png">
-            <p>完全個室</p>
-          </div>
-          <p class="text-contents">周囲の目を気にせず自分のペースでゴルフを楽しめます。</p>
+          <section class="face back">
+            <div class="backHeader">
+              <div class="bt"><p class="t1">RESERVATION</p><p class="t2">予約 / 空き状況</p></div>
+              <div class="actions">
+                <!-- ★閉じるを「×＋閉じる」に（1つだけ） -->
+                <button class="iconBtn" data-close type="button" aria-label="閉じる">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                  </svg>
+                  <span class="lbl">閉じる</span>
+                </button>
+                <a class="btn" href="https://coubic.com/verde-green" target="_blank" rel="noopener">予約する</a>
+              </div>
+            </div>
+
+            <div class="content">
+              <div class="section" style="text-align:center;">
+                <img class="logoBig" src="logo.png" alt="VERDE barbers club" />
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+                  <a class="btn" href="https://coubic.com/verde-green" target="_blank" rel="noopener">予約する</a>
+                </div>
+
+                <div style="margin-top:10px; font-size:12px; color:rgba(243,239,230,.62);">
+                  TEL：
+                  <a href="tel:0477117150" style="color:rgba(243,239,230,.82); text-decoration:none; border-bottom:1px solid rgba(243,239,230,.22);">
+                    047-711-7150
+                  </a>
+                </div>
+
+                <div style="margin-top:8px; font-size:12px; color:rgba(243,239,230,.62); line-height:1.7;">
+                  営業：9:30〜19:00（カット最終19:00 / カラー・パーマ最終18:00）<br>
+                  定休：月・火（祝日の月・火は営業）
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>NOTE</h3>
+                <div style="color:rgba(243,239,230,.70);font-size:12px;line-height:1.9;">
+                  古き良き「床屋」を大切にした、高級理容店。<br>
+                  蒸しタオルとマッサージを含む“床屋の極上サービス”を、しっかり味わえます。
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>SNS</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <a class="btn secondary" href="https://www.instagram.com/verde_bar_ber_club" target="_blank" rel="noopener">Instagram / BARBERS</a>
+                  <a class="btn secondary" href="https://www.instagram.com/verde__golf__club" target="_blank" rel="noopener">Instagram / GOLF</a>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1891 のコピー.png">
-            <p>高性能分析</p>
-          </div>
-          <p class="text-contents">今まではショットからおよそ4,2秒のシミュレーション解析が必要でしたが、VERDEが取り入れたGOLFRISEのシステムは、業界最速の0,4秒。ストレスだった反応の遅さを劇的に改善し、よりリアルに近い体感とストレスフリーなシミュレーションを実現しました。
+      </article>
 
-また、打球のシミュレートだけでなく、スイングをアクションカメラで自動撮影できるので、スイングプレーン・自分のいい点・悪い点がまるわかり。
-スコアアップにつながる自己分析を可能にすることで、プロのスイングに近づくための本気のニーズにお応えします。
+      <!-- MENU -->
+      <article class="flip" data-open="0">
+        <div class="inner">
+          <section class="face front">
+            <img class="orn menu" src="scissors.png" alt="" aria-hidden="true" />
 
-</p>
-        </div>
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1272 2 のコピー.png">
-            <p>自由に使える<br>オシャレな空間</br></p>
-          </div>
-          <p class="text-contents">VERDE GOLF CLUB が他のインドアゴルフ練習場と違う優れた点は優雅でオシャレな空間を一人占めできる点です。ストイックなゴルフ練習はもちろん、友人と楽しく飲みながらのんびりとゴルフを楽しんだり、宴会場としても最適な空間をご用意しました。</p>
-        </div>
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1970 のコピー.png">
-            <p>世界中の<br>97コース内蔵</p>
-          </div>
-          <p class="text-contents">太平洋クラブ御殿場・富士カントリークラブをはじめとする日本の有名10コースに加え、韓国・アメリカ・ヨーロッパなど世界各国のコースをお楽しみいただけます。</p>
-        </div>
+            <div class="topRow">
+              <div class="tag">MENU</div>
+              <div class="more" aria-hidden="true">+</div>
+            </div>
 
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1916 のコピー.png">
-            <p>駐車場２台完備</p>
-          </div>
-          <p class="text-contents">ふとフォームを改善したいなと思った時に気軽にご利用できます。</p>
-        </div>
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1918 のコピー.png">
-            <p>レンタルクラブ有り</p>
-          </div>
-          <p class="text-contents">仕事帰りにフラット軽い気持ちでゴルフ練習ができるのもインドアゴルフ練習場の魅力の一つです。</p>
-        </div>
-       
-        <div class="clear"></div>
+            <div>
+              <h2 class="title">メニュー</h2>
+            </div>
 
-        <div class="container">
-          <div class="heading">
+            <div class="metaRow">
+              <div class="metaOneLine">詳細は予約サイトへ</div>
+              <div class="chip">Coubic</div>
+            </div>
+          </section>
+
+          <section class="face back">
+            <div class="backHeader">
+              <div class="bt"><p class="t1">MENU</p><p class="t2">価格 / 時間</p></div>
+              <div class="actions">
+                <button class="iconBtn" data-close type="button" aria-label="閉じる">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                  </svg>
+                  <span class="lbl">閉じる</span>
+                </button>
+                <a class="btn" href="https://coubic.com/verde-green" target="_blank" rel="noopener">予約する</a>
+              </div>
+            </div>
+
+            <div class="content">
+              <div class="section">
+                <h3>NOTICE</h3>
+                <div style="color:rgba(243,239,230,.70);font-size:12px;line-height:1.9;">
+                  ※前日の19:00までのご予約で <b style="color:rgba(243,239,230,.92);">10%OFF</b><br>
+                  ※価格・内容は予約ページと同じ表記です（最新は予約サイトで確認）。<br>
+                  ※シルバーは「60歳以上 / 平日9:30〜16:00来店限定」
+                </div>
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                  <a class="btn" href="https://coubic.com/verde-green/3810903" target="_blank" rel="noopener">予約ページで確認</a>
+                </div>
+              </div>
             
-          
-          </div>
-          
-        </div>
-      </div>
-
-      
-    </div>
-  </div>
-
-  <div class="image">
-    
-    <img src="IMG_0452.jpg">
-  </div>
-
-
-  <div class="Golf-lesson-wrapper">
-    <div class="container">
-      <div class="heading">
-        <h1>サブスク会員様の特典</h1>
-      </div>
-      <div class="lessons">
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="IMG_1917 のコピー.png">
-            <p>プラス３名様まで</p>
-          </div>
-          <p class="text-contents">一打席予約するとプラス３名様までご利用いただけます。※ビジター様は１打席につき、１名様まで同伴可能です。</p>
-        </div>
-
-        <div class="lesson">
-          <div class="lesson-icon">
-            <img src="DSCF0986 のコピー.png">
-            <p>併設の高級理容店<br>をお得にご利用<br></p>
-          </div>
-          <p class="text-contents">会員様はVERDE GOLF CLUB併設のVERDE BARBERS CLUBを他のお客様よりもお得にご利用できます。詳しい情報は随時ご連絡します。</p>
-        </div>
-        
-        <div class="clear"></div>
-
-        <div class="container">
-          <div class="heading">
-            <h3>VERDE BARBERS CLUB の詳しい情報はこちらから↓</h3>
+              <div class="section">
+                <h3>CUT / COURSE</h3>
             
-          </div>
-          <a href="https://integrated-end.github.io/vb/" class="btn message">BARBERS CLUBのWebサイトへ</a>
+                <details open>
+                  <summary>大人<span class="chev"></span></summary>
+                  <div class="detailBody">
+                    <div class="row"><div class="l">VERDEコース（30分）</div><div class="r">¥5,500</div></div>
+                    <div class="row"><div class="l">カット＋シャンプー or シェービング（30分）</div><div class="r">¥5,000</div></div>
+                    <div class="row"><div class="l">カット（30分）</div><div class="r">¥4,500</div></div>
+                  </div>
+                </details>
+            
+                <details>
+                  <summary>大学生・専門学生<span class="chev"></span></summary>
+                  <div class="detailBody">
+                    <div class="row"><div class="l">VERDEコース（30分）</div><div class="r">¥5,000</div></div>
+                    <div class="row"><div class="l">カット＋シャンプー or シェービング（30分）</div><div class="r">¥4,500</div></div>
+                    <div class="row"><div class="l">カット（30分）</div><div class="r">¥4,000</div></div>
+                  </div>
+                </details>
+            
+                <details>
+                  <summary>高校生<span class="chev"></span></summary>
+                  <div class="detailBody">
+                    <div class="row"><div class="l">VERDEコース（30分）</div><div class="r">¥4,500</div></div>
+                    <div class="row"><div class="l">カット＋シャンプー or シェービング（30分）</div><div class="r">¥4,000</div></div>
+                    <div class="row"><div class="l">カット（30分）</div><div class="r">¥3,500</div></div>
+                  </div>
+                </details>
+            
+                <details>
+                  <summary>中学生<span class="chev"></span></summary>
+                  <div class="detailBody">
+                    <div class="row"><div class="l">VERDEコース（30分）</div><div class="r">¥4,000</div></div>
+                    <div class="row"><div class="l">カット＋シャンプー or シェービング（30分）</div><div class="r">¥3,500</div></div>
+                    <div class="row"><div class="l">カット（30分）</div><div class="r">¥3,000</div></div>
+                  </div>
+                </details>
+            
+                <details>
+                  <summary>小学生以下<span class="chev"></span></summary>
+                  <div class="detailBody">
+                    <div class="row"><div class="l">VERDEコース（30分）</div><div class="r">¥3,500</div></div>
+                    <div class="row"><div class="l">カット＋シャンプー or シェービング（30分）</div><div class="r">¥3,000</div></div>
+                    <div class="row"><div class="l">カット（30分）</div><div class="r">¥2,500</div></div>
+                  </div>
+                </details>
+            
+                <details>
+                  <summary>シルバー（60歳以上・平日9:30〜16:00）<span class="chev"></span></summary>
+                  <div class="detailBody">
+                    <div class="row"><div class="l">VERDEコース（30分）</div><div class="r">¥4,500</div></div>
+                    <div class="row"><div class="l">カット＋シャンプー or シェービング（30分）</div><div class="r">¥4,000</div></div>
+                    <div class="row"><div class="l">カット（30分）</div><div class="r">¥3,500</div></div>
+                  </div>
+                </details>
+              </div>
+            
+              <div class="section">
+                <h3>CARE / OPTION</h3>
+                <div class="row"><div class="l">フェイシャルエステ（30分）</div><div class="r">¥3,500</div></div>
+                <div class="row"><div class="l">レディースシェービング（30分）</div><div class="r">¥3,500</div></div>
+                <div class="row"><div class="l">ヘッドスパ（60分）</div><div class="r">¥3,500</div></div>
+                <div class="row"><div class="l">ヘアカラー（60分）</div><div class="r">¥4,500〜</div></div>
+                <div class="row"><div class="l">白髪ぼかし（30分）</div><div class="r">¥3,500</div></div>
+                <div class="row"><div class="l">パーマ（90分）</div><div class="r">¥5,500〜</div></div>
+              </div>
+            
+              <div class="section">
+                <h3>RESERVATION RULE</h3>
+                <div class="row"><div class="l">受付開始</div><div class="r">90日前 0:00〜</div></div>
+                <div class="row"><div class="l">受付締切</div><div class="r">1時間前まで</div></div>
+                <div class="row"><div class="l">日程変更</div><div class="r">1時間前まで</div></div>
+                <div class="row"><div class="l">キャンセル</div><div class="r">1時間前まで</div></div>
+              </div>
+            </div>
+            
+          </section>
         </div>
-      </div>
+      </article>
 
-      
-    </div>
-  </div>
+      <!-- LOCATION -->
+      <article class="flip" data-open="0">
+        <div class="inner">
+          <section class="face front">
+            <img class="orn location" src="ヴィンテージスタイルのカミソリ.png" alt="" aria-hidden="true" />
 
-  <div class="images">
-    <img src="スクリーンショット 2024-02-04 17.15.54.png">
-  </div>
-
-
-
-
-  <div class="faq-wrapper">
-    <div class="container">
-      <div class="heading">
-        <h2>FAQ</h2>
-      </div>
-      <div class="faq">
-        <ul id="faq-list">
-          <li class="faq-list-item">
-            <h3 class="question">貸しクラブはありますか？</h3>
-            <span>+</span>
-            <div class="answer">
-              <p>メンズ２セット、レディース１セットご用意してます。</p>
+            <div class="topRow">
+              <div class="tag">LOCATION</div>
+              <div class="more" aria-hidden="true">+</div>
             </div>
-          </li>
-          <li class="faq-list-item">
-            <h3 class="question">貸しシューズ、グローブはありますか？</h3>
-            <span>+</span>
-            <div class="answer">
-              <p>ございません。ご自身でご用意ください。</p>
+
+            <div>
+              <h2 class="title">ロケーション</h2>
             </div>
-          </li>
-          <li class="faq-list-item">
-            <h3 class="question">飲食、アルコールの持ち込みは可能ですか？</h3>
-            <span>+</span>
-            <div class="answer">
-              <p>可能ですがゴミの持ち帰り、使用後の清掃のご協力をお願いします。</p>
+
+            <div class="metaRow">
+              <div class="metaOneLine">市川市 / 駐車場4台</div>
+              <div class="chip">MAP</div>
             </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
+          </section>
 
-  <div class="message-wrapper">
-    <div class="container">
-      <div class="heading">
-        <h2>予約する‼️</h2>
-        <h3>Let's push !! </h3>
-      </div>
-      <a href="https://coubic.com/verde-green" class="btn message">予約する！！</a>
-    </div>
-  </div>
-  <footer>
-    <div class="container">
-      <img src="名称未設定-34のコピー.png">
-      <p>VERDE GOLF</p>
-    </div>
-  </footer>
+          <section class="face back">
+            <div class="backHeader">
+              <div class="bt"><p class="t1">LOCATION</p><p class="t2">住所 / MAP</p></div>
+              <div class="actions">
+                <button class="iconBtn" data-close type="button" aria-label="閉じる">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                  </svg>
+                  <span class="lbl">閉じる</span>
+                </button>
+                <a class="btn" href="https://www.google.com/maps?q=272-0832%20%E5%8D%83%E8%91%89%E7%9C%8C%E5%B8%82%E5%B7%9D%E5%B8%82%E6%9B%BD%E8%B0%B76-30-16" target="_blank" rel="noopener">MAP</a>
+              </div>
+            </div>
 
-   <script src="script.js"></script>
-   
-  
-        
+            <div class="content">
+              <div class="section">
+                <h3>INFO</h3>
+                <div class="row"><div class="l">ADDRESS</div><div class="r">〒272-0832 千葉県市川市曽谷6-30-16</div></div>
+                <div class="row"><div class="l">TEL</div><div class="r"><a href="tel:0477117150" style="color:inherit; text-decoration:none; border-bottom:1px solid rgba(243,239,230,.22);">047-711-7150</a></div></div>
+                <div class="row"><div class="l">OPEN</div><div class="r">9:30–19:00（Cut最終19:00 / Color&Perm最終18:00）</div></div>
+                <div class="row"><div class="l">CLOSE</div><div class="r">月・火（祝日の月・火は営業）</div></div>
+                <div class="row"><div class="l">PARKING</div><div class="r">4台</div></div>
+              </div>
 
+              <!-- ★MAPを分かりやすく埋め込み（貼り付け） -->
+              <div class="section">
+                <h3>MAP</h3>
 
+                <div class="mapFrame">
+                  <iframe
+                    title="Google Map"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=272-0832%20%E5%8D%83%E8%91%89%E7%9C%8C%E5%B8%82%E5%B7%9D%E5%B8%82%E6%9B%BD%E8%B0%B76-30-16&output=embed">
+                  </iframe>
+                </div>
+
+                <div class="mapBtns">
+                  <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=272-0832%20%E5%8D%83%E8%91%89%E7%9C%8C%E5%B8%82%E5%B7%9D%E5%B8%82%E6%9B%BD%E8%B0%B76-30-16" target="_blank" rel="noopener">ルート案内</a>
+                  <a class="btn secondary" href="https://www.google.com/maps?q=272-0832%20%E5%8D%83%E8%91%89%E7%9C%8C%E5%B8%82%E5%B7%9D%E5%B8%82%E6%9B%BD%E8%B0%B76-30-16" target="_blank" rel="noopener">Googleマップで開く</a>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>TIP</h3>
+                <div style="color:rgba(243,239,230,.70);font-size:12px;line-height:1.9;">
+                  迷ったら電話でOK。案内します。
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <!-- MOOD -->
+      <article class="flip" data-open="0">
+        <div class="inner">
+          <section class="face front">
+            <img class="orn mood" src="ヴィンテージ風シェービングブラシ.png" alt="" aria-hidden="true" />
+
+            <div class="topRow">
+              <div class="tag">MOOD</div>
+              <div class="more" aria-hidden="true">+</div>
+            </div>
+
+            <div>
+              <h2 class="title">店の雰囲気</h2>
+            </div>
+
+            <div class="metaRow">
+              <div class="metaOneLine">上質 / 落ち着く空間</div>
+              <div class="chip">Gallery</div>
+            </div>
+          </section>
+
+          <section class="face back">
+            <div class="backHeader">
+              <div class="bt"><p class="t1">MOOD</p><p class="t2">写真 / 体験</p></div>
+              <div class="actions">
+                <button class="iconBtn" data-close type="button" aria-label="閉じる">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                  </svg>
+                  <span class="lbl">閉じる</span>
+                </button>
+                <a class="btn" href="https://coubic.com/verde-green" target="_blank" rel="noopener">予約する</a>
+              </div>
+            </div>
+
+            <div class="content">
+              <div class="section">
+                <h3>GALLERY</h3>
+                <div class="photos">
+                  <div class="ph"><img src="SCF2639.png" alt="店内写真1"></div>
+                  <div class="ph"><img src="DSCF260.png" alt="店内写真2"></div>
+                  <div class="ph"><img src="CF2668 .jpg" alt="店内写真3"></div>
+                  <div class="ph"><img src="タオル.png" alt="店内写真4"></div>
+                </div>
+                <div class="phCap">
+                  忙しい日常から離れて、オシャレな空間で休息。<br>
+                  蒸しタオルでお出迎え。床屋の“極上サービス”をしっかり。
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>STYLE GUIDE</h3>
+                <details><summary>今っぽいカットもいける？<span class="chev"></span></summary><div class="detailBody">今流行りのヘアスタイルに自信あり。スタイル写真の持ち込みもOK。</div></details>
+                <details><summary>カウンセリングは？<span class="chev"></span></summary><div class="detailBody">要望をしっかり聞いて、スタッフ間で共有。次回もスムーズに。</div></details>
+                <details><summary>パーマが不安<span class="chev"></span></summary><div class="detailBody">トリートメント効果の高いパーマや、次世代型デジタルアイロンパーマ（マースパーマ）にも対応。</div></details>
+              </div>
+
+              <div class="section">
+                <h3>+ NEXT DOOR</h3>
+                <div style="color:rgba(243,239,230,.70);font-size:12px;line-height:1.9;">
+                  併設のインドアゴルフ練習場あり。気になる人は覗いてみて。
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <!-- STORY -->
+      <article class="flip" data-open="0">
+        <div class="inner">
+          <section class="face front">
+            <img class="orn mood" src="ヴィンテージ風の金色の櫛.png" alt="" aria-hidden="true" />
+
+            <div class="topRow">
+              <div class="tag">STORY</div>
+              <div class="more" aria-hidden="true">+</div>
+            </div>
+
+            <div>
+              <h2 class="title">この店の話</h2>
+              <div class="sub">インタビュー / 日常</div>
+            </div>
+
+            <div class="metaRow">
+              <div class="metaOneLine">想い・人・空気感</div>
+              <div class="chip">Interview</div>
+            </div>
+          </section>
+
+          <section class="face back">
+            <div class="backHeader">
+              <div class="bt">
+                <p class="t1">STORY</p>
+                <p class="t2">インタビュー / SNS</p>
+              </div>
+              <div class="actions">
+                <button class="iconBtn" data-close type="button" aria-label="閉じる">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                  </svg>
+                  <span class="lbl">閉じる</span>
+                </button>
+                <a class="btn secondary" href="https://www.instagram.com/verde_bar_ber_club" target="_blank" rel="noopener">Instagram</a>
+              </div>
+            </div>
+
+            <div class="content">
+              <div class="section">
+                <h3>INTERVIEW</h3>
+                <div style="color:rgba(243,239,230,.70);font-size:12px;line-height:1.9;">
+                  なぜこの場所で、床屋を続けているのか。<br>
+                  技術よりも大切にしていること。<br>
+                  普段は語られない、VERDEの内側。
+                </div>
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                  <a class="btn" href="https://barbernavi.com/stylist-interview/shinobu-yanagisawa/" target="_blank" rel="noopener">記事を読む</a>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>INSTAGRAM</h3>
+                <div style="color:rgba(243,239,230,.70);font-size:12px;line-height:1.9;">
+                  日々の空気感や、何気ない一瞬を更新中。
+                </div>
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                  <a class="btn secondary" href="https://www.instagram.com/verde_bar_ber_club" target="_blank" rel="noopener">@verde_bar_ber_club</a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </article>
+
+    </section>
+  </main>
+
+<script>
+  const cards = Array.from(document.querySelectorAll('.flip'));
+
+  cards.forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      const interactive = e.target.closest('a,button,summary,details');
+      if(interactive) return;
+
+      const isOpen = card.dataset.open === "1";
+      cards.forEach(c=> c.dataset.open = "0");
+      card.dataset.open = isOpen ? "0" : "1";
+
+      if(!isOpen){
+        const top = card.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: Math.max(top - 12, 0), behavior: "smooth" });
+      }
+    });
+
+    card.querySelectorAll('[data-close]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        card.dataset.open = "0";
+
+        const top = card.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: Math.max(top - 12, 0), behavior: "smooth" });
+      });
+    });
+
+    card.querySelector('.back')?.addEventListener('click', (e)=>{
+      const interactive = e.target.closest('a,button,summary,details');
+      if(interactive) return;
+      e.stopPropagation();
+    }, true);
+  });
+</script>
 </body>
-
 </html>
